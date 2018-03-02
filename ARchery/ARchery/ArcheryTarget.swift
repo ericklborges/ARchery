@@ -25,7 +25,7 @@ class ArcheryTarget: SCNNode {
         let archeryTargetShape = SCNPhysicsShape(geometry: archeryTargetGeometry, options: nil)
         self.physicsBody = SCNPhysicsBody(type: .static, shape: archeryTargetShape)
         self.physicsBody?.isAffectedByGravity = false
-        // FIXME: - Collision
+        // Collision
         self.physicsBody?.categoryBitMask = CollisionCategory.archeryTarget.rawValue
         self.physicsBody?.contactTestBitMask = CollisionCategory.arrows.rawValue
     }

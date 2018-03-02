@@ -25,6 +25,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, SCNPhysicsContactDele
     // MARK: - Properties
     var targetDistance:Float = 2
     var archeryTargetNode:SCNNode!
+    var shootPower:Float = 2
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -106,12 +107,17 @@ class ViewController: UIViewController, ARSCNViewDelegate, SCNPhysicsContactDele
         arrowNode.position = self.getUserPosition()
         
         let shootDirection = self.getUserDirection()
-        arrowNode.physicsBody?.applyForce(shootDirection, asImpulse: true)
+        let shootForce = SCNVector3(shootDirection.x * shootPower, shootDirection.y * shootPower, shootDirection.z * shootPower)
+        arrowNode.physicsBody?.applyForce(shootForce, asImpulse: true)
         sceneView.scene.rootNode.addChildNode(arrowNode)
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: {
             arrowNode.removeFromParentNode()
         })
+    }
+    
+    func uptadeScore(for ponctuation: Int){
+        
     }
     
     // MARK: - Auxiliary Methods
@@ -142,12 +148,23 @@ class ViewController: UIViewController, ARSCNViewDelegate, SCNPhysicsContactDele
     
     // MARK: - SCNPhysicsContactDelegate
     func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
-        //print("did begin contact", contact.nodeA.physicsBody!.categoryBitMask, contact.nodeB.physicsBody!.categoryBitMask)
-        if contact.nodeA.physicsBody?.categoryBitMask == CollisionCategory.archeryTarget.rawValue || contact.nodeB.physicsBody?.categoryBitMask == CollisionCategory.archeryTarget.rawValue {
-            print("Hit Target!")
-            // get nodes
+        
+        // guarantee contact nodes order
+        var firstNode: SCNNode
+        var secondNode: SCNNode
+        if (contact.nodeA.physicsBody!.categoryBitMask) < contact.nodeB.physicsBody!.categoryBitMask {
+            firstNode = contact.nodeA
+            secondNode = contact.nodeB
+        } else {
+            firstNode = contact.nodeB
+            secondNode = contact.nodeA
+        }
+        
+        if ((firstNode.physicsBody!.categoryBitMask & CollisionCategory.arrows.rawValue != 0) &&
+            (secondNode.physicsBody!.categoryBitMask & CollisionCategory.archeryTarget.rawValue != 0)) {
+            // get contact nodes
+            guard let arrowNode = firstNode as? Arrow else { return }
             guard let targetNode = self.archeryTargetNode else { return }
-            let arrowNode = contact.nodeB
             // target center
             let targetCenter = targetNode.position
             // distance from center
@@ -155,11 +172,12 @@ class ViewController: UIViewController, ARSCNViewDelegate, SCNPhysicsContactDele
             let distanceY = powf((targetCenter.y - contact.contactPoint.y), 2)
             let distanceZ = powf((targetCenter.z - contact.contactPoint.z), 2)
             let contactDistanceFromCenter = sqrt(distanceX + distanceY + distanceZ)
+            // punctuation
+            let targetNodeScale = self.archeryTargetNode.presentation.scale.x
+            let targetSize = ((self.archeryTargetNode.presentation.boundingBox.max.y - self.archeryTargetNode.presentation.boundingBox.min.y) / 2) * targetNodeScale
+            let punctuation = Int((1 - (contactDistanceFromCenter / targetSize)) * 10) + 1
             
             arrowNode.physicsBody?.type = .static
-            
-            //FIXME: - Make contact.nodeB stop
-            
         }
     }
 
