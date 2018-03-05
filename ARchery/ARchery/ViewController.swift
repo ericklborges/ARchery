@@ -21,16 +21,25 @@ class ViewController: UIViewController, ARSCNViewDelegate, SCNPhysicsContactDele
 
     // MARK: - Outlet
     @IBOutlet var sceneView: ARSCNView!
+    @IBOutlet weak var scoreLabel: UILabel!
     
     // MARK: - Properties
     var targetDistance:Float = 2
     var archeryTargetNode:SCNNode!
-    var shootPower:Float = 2
+    var shootPower:Float = 5
+    var userScore:Int = 0 {
+        didSet {
+            DispatchQueue.main.async {
+                self.scoreLabel.text = String(self.userScore)
+            }
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupScene()
         setupFirstTapGesture()
+        userScore = 0
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -49,7 +58,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, SCNPhysicsContactDele
         self.sceneView.delegate = self
         // Debug options
         self.sceneView.showsStatistics = true
-//        self.sceneView.debugOptions = [ARSCNDebugOptions.showWorldOrigin]
+        self.sceneView.debugOptions = [ARSCNDebugOptions.showWorldOrigin]
+//        self.sceneView.debugOptions = [.showBoundingBoxes, .showPhysicsShapes,]
         // Scene
         let scene = SCNScene()
         self.sceneView.scene = scene
@@ -97,8 +107,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, SCNPhysicsContactDele
         
         self.sceneView.scene.rootNode.addChildNode(archeryTargetNode)
         
-        self.sceneView.gestureRecognizers?.removeAll()
-        self.setupSecondTapGesture()
+//        self.sceneView.gestureRecognizers?.removeAll()
+//        self.setupSecondTapGesture()
     }
     
     @objc
@@ -107,7 +117,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, SCNPhysicsContactDele
         arrowNode.position = self.getUserPosition()
         
         let shootDirection = self.getUserDirection()
-        let shootForce = SCNVector3(shootDirection.x * shootPower, shootDirection.y * shootPower, shootDirection.z * shootPower)
+        let shootForce = SCNVector3(shootDirection.x * shootPower, shootDirection.y * (shootPower+1), shootDirection.z * shootPower)
         arrowNode.physicsBody?.applyForce(shootForce, asImpulse: true)
         sceneView.scene.rootNode.addChildNode(arrowNode)
         
@@ -175,7 +185,8 @@ class ViewController: UIViewController, ARSCNViewDelegate, SCNPhysicsContactDele
             // punctuation
             let targetNodeScale = self.archeryTargetNode.presentation.scale.x
             let targetSize = ((self.archeryTargetNode.presentation.boundingBox.max.y - self.archeryTargetNode.presentation.boundingBox.min.y) / 2) * targetNodeScale
-            let punctuation = Int((1 - (contactDistanceFromCenter / targetSize)) * 10) + 1
+            let ponctuation = Int((1 - (contactDistanceFromCenter / targetSize)) * 10) + 1
+            userScore += ponctuation
             
             arrowNode.physicsBody?.type = .static
         }

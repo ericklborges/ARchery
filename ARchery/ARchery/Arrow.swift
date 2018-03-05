@@ -18,7 +18,7 @@ class Arrow: SCNNode {
         self.geometry = sphere
         let shape = SCNPhysicsShape(geometry: sphere, options: nil)
         self.physicsBody = SCNPhysicsBody(type: .dynamic, shape: shape)
-        self.physicsBody?.isAffectedByGravity = false
+        self.physicsBody?.isAffectedByGravity = true
         // Collision
         self.physicsBody?.categoryBitMask = CollisionCategory.arrows.rawValue
         self.physicsBody?.contactTestBitMask = CollisionCategory.archeryTarget.rawValue        
